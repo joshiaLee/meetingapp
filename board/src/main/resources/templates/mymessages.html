@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>My Messages</title>
+
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        button[type="button"] {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            padding: 10px;
+            width: 120px;
+            font-size: 1em;
+            background-color: #4285f4;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button[type="button"]:hover:not([disabled]) {
+            cursor: pointer;
+            background-color: #3367d6;
+        }
+    </style>
+
+</head>
+<body>
+<div class="container">
+<h1>My Messages</h1>
+
+    <table>
+        <thead>
+        <tr>
+            <th>From Member</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="m : ${maps}">
+            <td>
+                <a th:href="@{/member/mymessage(id=${m.value.id})}" th:text="${m.value.username}" style="font-size: 25px">1</a>
+            <td>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <button type="button" onclick="location.href='/member/my'">마이페이지</button>
+</div>
+
+</body>
+</html>

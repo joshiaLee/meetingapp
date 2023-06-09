@@ -1,0 +1,58 @@
+
+<!DOCTYPE html>
+<html>
+  <html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+
+
+  <head>
+    <link rel="stylesheet" href="css/login.css"/>
+    <meta charset="UTF-8">
+    <title>게시글 리스트 페이지</title>
+  </head>
+
+
+
+  <div class="container">
+    <form>
+      <img th:src="|/images/manbogi.jpg|" width="175" height="175" style="display: block; margin: 0 auto;"/>
+      <span class="app-name">그대 만 보기</span>
+      <input type="text" placeholder="Email" name="email" id="email">
+      <input type="password" placeholder="Password" name="password" id="password">
+      <button type="button" onclick="login()" class="login-btn">로그인</button>
+      <button type="button" onclick="location.href='/member/save'" class="signup-btn">회원가입</button>
+    </form>
+  </div>
+  <script>
+    const login = () => {
+
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const params = {
+          "email" : email,
+          "password" : password
+      }
+      $.ajax({
+        // 요청방식: post, url: "email-check", 데이터: 이메일
+        type: "post",
+        url: "/member/login",
+        data: JSON.stringify(params),
+        contentType: "application/json",
+
+        success: function(res) {
+          console.log("요청성공", res);
+          if(res === "ok") {
+            location.href = "/board/list";
+          } else {
+            alert("아이디나 비밀번호가 일치하지 않습니다.");
+          }
+
+        },
+        error: function(err) {
+          console.log("에러발생", err);
+        }
+      });
+    }
+
+  </script>
+</html>

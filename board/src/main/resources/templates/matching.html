@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <!-- Slick Carousel CSS 파일 추가 -->
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css">
+    <style>
+        #myself {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        #introduction {
+            width: 50%;
+            display: block;
+            margin: 0 auto;
+        }
+
+        input[type="submit"]{
+            margin-top: 20px;
+            margin-bottom: 10px;
+            padding: 10px;
+            width: 120px;
+            font-size: 1em;
+            background-color: #4285f4;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+
+        input[type="submit"]:hover:not([disabled]){
+            cursor: pointer;
+            background-color: #3367d6;
+        }
+
+        button[type="button"] {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            padding: 10px;
+            width: 120px;
+            font-size: 1em;
+            background-color: #4285f4;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button[type="button"]:hover:not([disabled]) {
+            cursor: pointer;
+            background-color: #3367d6;
+        }
+        button[type="button_matching"]:hover:not([disabled]) {
+            cursor: pointer;
+            background-color: #ffc0cb;
+        }
+
+        button[type="button_matching"] {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            padding: 10px;
+            width: 100px;
+            font-size: 1em;
+            background-color: #f44242;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+        }
+        #content-section textarea {
+            width: 50%;
+            display: block;
+            margin: 0 auto;
+            height: 100px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            font-size: 16px;
+            line-height: 1.5;
+            resize: vertical;
+
+        }
+    </style>
+
+</head>
+
+<body>
+<div class="container" >
+    <div class="py-5 text-center" style="text-align: center;">
+        <button type="button_matching" onclick="location.href='/member/matching'">만보기 매칭</button>
+        <button type="button" onclick="location.href='/board/list'">게시판 목록</button>
+        <h2 style="text-align: center;" th:text="${member.username}">이름 </h2>
+    </div>
+    <div class="slick" >
+        <div th:each="imageFile : ${member.imageEntities}">
+            <img th:src="|/images/${imageFile.getStoreFileName()}|" width="300" height="300" style="display: block; margin: 0 auto;"/>
+        </div>
+    </div>
+    <div class="my">
+        <div id="myself">자기소개서</div>
+        <textarea id="introduction" placeholder="1000자 이내" th:text="${member.introduction}" style="width: 500px; height: 100%; margin: 0 auto;" disabled></textarea>
+    </div>
+    <br>
+    <form th:action="@{/member/view}" method="post">
+        <div id="content-section">
+            <textarea id="content" name="content"></textarea>
+            <input type="hidden" th:name="toMember" th:value="${member.getId()}" >
+
+            <br>
+            <input id="button" type="submit" value="쪽지 보내기" style="display: block; margin: 0 auto"/>
+        </div>
+    </form>
+</div> <!-- /container -->
+
+<!-- Slick Carousel JS 파일 추가 -->
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
+
+<script>
+    $(document).ready(function(){
+        // Slick Carousel 설정
+        $('.slick').slick({
+            dots: true, // 하단의 점으로 현재 위치 표시
+            arrows: false, // 좌우 화살표 표시
+            infinite: true, // 무한 반복
+            speed: 500, // 이동 속도
+            slidesToShow: 1, // 보여지는 슬라이드 개수
+            adaptiveHeight: true // 슬라이드 높이 자동 조절
+        });
+    });
+</script>
+
+</body>
+</html>

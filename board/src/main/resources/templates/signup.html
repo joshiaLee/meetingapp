@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<!-- 회원가입 폼 -->
+
+<html lang="en">
+<script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=g6pjaqf5zn"></script>
+    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?clientId=g6pjaqf5zn&submodules=geocoder"></script>
+
+    <title>회원가입</title>
+    <style>
+        /* 스타일 */
+        form {
+            display: flex;
+            flex-direction: column; /* 수정 */
+            align-items: center;
+            margin-top: 50px;
+        }
+
+        div {
+            margin-top: 10px;
+        }
+
+        label {
+            display: inline-block;
+            width: 100px;
+            text-align: right;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 200px;
+        }
+
+        .search {
+            display: flex;
+            align-items: center;
+        }
+
+        #address {
+            width: 120px;
+            margin-left: 3px;
+        }
+
+        #submit {
+            margin-left: 10px;
+        }
+
+        button[type="button"] {
+            margin-top: 20px;
+            padding: 10px;
+            width: 100px;
+            font-size: 1.1em;
+            background-color: #4285f4;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button[type="button"]:hover:not([disabled]) {
+            cursor: pointer;
+            background-color: #3367d6;
+        }
+
+        #check-result2 {
+            text-align: center;
+            margin-left: 40px; /* 이동시킬 거리 */
+        }
+
+        #introduction {
+            width: 400px;
+            margin-top : 10px;
+            min-height : 300px;
+            text-align: center;
+        }
+
+        .my{
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        #myself{
+            font-size: 100%;
+            text-align: center;
+        }
+
+        .app-name {
+            font-style: oblique;
+            font-family: Arial, sans-serif;
+            font-size: 36px;
+            font-weight: bold;
+            color: hotpink;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+    </style>
+
+
+<body>
+<form id="signup-form">
+    <img th:src="|/images/manbogi.jpg|" width="125" height="125" style="display: block; margin: 0 auto;"/>
+    <span class="app-name">그대 만 보기</span>
+    <div>
+
+        <label for="username">사용자 아이디:</label>
+        <input type="text" id="username" name="username">
+    </div>
+    <div>
+        <label for="email">이메일:</label>
+        <input type="email" id="email" name="email" onkeyup="emailCheck()">
+        <p id="check-result2"></p>
+    </div>
+    <div>
+        <label for="password">비밀번호:</label>
+        <input type="password" id="password" name="password">
+    </div>
+    <div>
+        <label for="confirm-password">비밀번호 확인:</label>
+        <input type="password" id="confirm-password" name="confirm-password" onkeyup="checkPassword()">
+        <p id="check-result4"></p>
+    </div>
+    <div>
+        <label for="age">나이:</label>
+        <input type="number" id="age" name="age">
+    </div>
+
+    <div>
+        <span >성별: </span>
+        <input type="radio" name="sex" value="MAN" checked="checked">남자
+        <input type="radio" name="sex" value="WOMAN" >여자
+    </div>
+    <div class="my">
+        <div id="myself">자기소개서</div>
+        <textarea id="introduction" placeholder="1000자 이내"></textarea>
+    </div>
+    <div id="uploadForm" style="margin-top: 30px;">
+        <span >사진: </span>
+    　　 <input type="file" name="imageFiles" multiple="multiple" accept=".png, .jpg, .jpeg">
+    　　 <input type="button" id="uploadBtn" value="사진 등록">
+    </div>
+    <div>
+        <div class="search" style="margin-top: 30px;">
+            <label for="address" >거주지 선택:</label>
+            <input type="text" id="address" name="address" placeholder="지번, 도로명" value="불광로 6" >
+            <input type="button" id="submit" value="주소 검색">
+        </div>
+    </div>
+    <div id="map" style="width:40%;height:400px;margin: 50px auto 0;"></div>
+
+    <button type="button" id="submit-button" onclick="validateForm()">가입</button>
+</form>
+</body>
+
+
+<script th:inline="javascript">
+
+    var imagesField;
+
+    inputFileList = new Array();
+
+    // 파일 선택
+    $('input[name=imageFiles]').on('change', function(e) {
+        var files = e.target.files;
+        var filesArr = Array.prototype.slice.call(files);
+
+        // 업로드 된 파일 유효성 체크
+        if (filesArr.length > 9) {
+            alert("사진은 최대 9개까지 업로드 가능합니다.");
+            $('input[name=imageFiles]').val('');
+            return;
+        }
+
+
+        filesArr.forEach(function(f) {
+            inputFileList.push(f);    // 이미지 파일을 배열에 담는다.
+        });
+    });
+
+    // 업로드 수행
+    $('#uploadBtn').on('click', function() {
+        console.log("inputFileList: " + inputFileList);
+        let formData = new FormData($('#signup-form')[0]);  // 폼 객체
+
+        if(inputFileList.length === 0){
+            alert("사진을 한장이상 선택해주세요.")
+            return;
+        }
+
+        for (let i = 0; i < inputFileList.length; i++) {
+            formData.append("images", inputFileList[i]);  // 배열에서 이미지들을 꺼내 폼 객체에 담는다.
+        }
+        console.log("formData: " + formData);
+        $.ajax({
+            type:'post'
+            , enctype:"multipart/form-data"  // 업로드를 위한 필수 파라미터
+            , url: '/member/upload_image'
+            , data: formData
+            , processData: false   // 업로드를 위한 필수 파라미터
+            , contentType: false   // 업로드를 위한 필수 파라미터
+            , success: function(data) {
+                console.log(data);
+                alert("사진이 등록되었습니다.");
+                imagesField = data;
+            }
+            , error: function(e) {
+                alert("error:" + e);
+            }
+        });
+    });
+
+
+    var map = new naver.maps.Map("map", {
+        center: new naver.maps.LatLng(37.3595316, 127.1052133),
+        zoom: 15,
+        mapTypeControl: true
+    });
+
+    var infoWindow = new naver.maps.InfoWindow({
+        anchorSkew: true
+    });
+
+    map.setCursor('pointer');
+
+    function searchCoordinateToAddress(latlng) {
+
+        infoWindow.close();
+
+        naver.maps.Service.reverseGeocode({
+            coords: latlng,
+            orders: [
+                naver.maps.Service.OrderType.ADDR,
+                naver.maps.Service.OrderType.ROAD_ADDR
+            ].join(',')
+        }, function(status, response) {
+            if (status === naver.maps.Service.Status.ERROR) {
+                return alert('Something Wrong!');
+            }
+
+            var items = response.v2.results,
+                address = '',
+                htmlAddresses = [];
+
+            for (var i=0, ii=items.length, item, addrType; i<ii; i++) {
+                item = items[i];
+                address = makeAddress(item) || '';
+                addrType = item.name === 'roadaddr' ? '[도로명 주소]' : '[지번 주소]';
+
+                htmlAddresses.push((i+1) +'. '+ addrType +' '+ address);
+            }
+
+            map.center = latlng;
+            point = new naver.maps.Point(latlng.x, latlng.y);
+
+
+            infoWindow.setContent([
+                '<div style="padding:10px;min-width:100px;line-height:100%;">',
+                '<h5 style="margin-top:5px;">검색 좌표 </h5><br />',
+                htmlAddresses.join('<br />'),
+                '</div>'
+            ].join('\n'));
+
+            map.setCenter(point);
+
+            infoWindow.open(map, latlng);
+            document.getElementById('address').value = address;
+        });
+    }
+
+    function searchAddressToCoordinate(address) {
+        naver.maps.Service.geocode({
+            query: address
+        }, function(status, response) {
+            if (status === naver.maps.Service.Status.ERROR) {
+                return alert('Something Wrong!');
+            }
+
+            if (response.v2.meta.totalCount === 0) {
+                return alert('totalCount' + response.v2.meta.totalCount);
+            }
+
+            var htmlAddresses = [],
+                item = response.v2.addresses[0],
+                point = new naver.maps.Point(item.x, item.y);
+
+            if (item.roadAddress) {
+                htmlAddresses.push('[도로명 주소] ' + item.roadAddress);
+            }
+
+            if (item.jibunAddress) {
+                htmlAddresses.push('[지번 주소] ' + item.jibunAddress);
+            }
+
+            //if (item.englishAddress) {
+            //    htmlAddresses.push('[영문명 주소] ' + item.englishAddress);
+
+
+            infoWindow.setContent([
+                '<div style="padding:10px;min-width:100px;line-height:100%;">',
+                '<h5 style="margin-top:5px;">검색 주소 : '+ address +'</h5><br />',
+                htmlAddresses.join('<br />'),
+                '</div>'
+            ].join('\n'));
+
+            map.setCenter(point);
+            infoWindow.open(map, point);
+        });
+    }
+
+    function initGeocoder() {
+        map.addListener('click', function(e) {
+            searchCoordinateToAddress(e.coord);
+        });
+
+        $('#address').on('keydown', function(e) {
+            var keyCode = e.which;
+
+            if (keyCode === 13) { // Enter Key
+                searchAddressToCoordinate($('#address').val());
+            }
+        });
+
+        $('#submit').on('click', function(e) {
+            e.preventDefault();
+
+            searchAddressToCoordinate($('#address').val());
+        });
+
+        searchAddressToCoordinate('정자동');
+    }
+
+    function makeAddress(item) {
+        if (!item) {
+            return;
+        }
+
+        var name = item.name,
+            region = item.region,
+            land = item.land,
+            isRoadAddress = name === 'roadaddr';
+
+        var sido = '', sigugun = '', dongmyun = '', ri = '', rest = '';
+
+        if (hasArea(region.area1)) {
+            sido = region.area1.name;
+        }
+
+        if (hasArea(region.area2)) {
+            sigugun = region.area2.name;
+        }
+
+        if (hasArea(region.area3)) {
+            dongmyun = region.area3.name;
+        }
+
+        if (hasArea(region.area4)) {
+            ri = region.area4.name;
+        }
+
+        if (land) {
+            if (hasData(land.number1)) {
+                if (hasData(land.type) && land.type === '2') {
+                    rest += '산';
+                }
+
+                rest += land.number1;
+
+                if (hasData(land.number2)) {
+                    rest += ('-' + land.number2);
+                }
+            }
+
+            if (isRoadAddress === true) {
+                if (checkLastString(dongmyun, '면')) {
+                    ri = land.name;
+                } else {
+                    dongmyun = land.name;
+                    ri = '';
+                }
+
+                if (hasAddition(land.addition0)) {
+                    rest += ' ' + land.addition0.value;
+                }
+            }
+        }
+
+        return [sido, sigugun, dongmyun, ri, rest].join(' ');
+    }
+
+    function hasArea(area) {
+        return !!(area && area.name && area.name !== '');
+    }
+
+    function hasData(data) {
+        return !!(data && data !== '');
+    }
+
+    function checkLastString (word, lastString) {
+        return new RegExp(lastString + '$').test(word);
+    }
+
+    function hasAddition (addition) {
+        return !!(addition && addition.value);
+    }
+
+    naver.maps.onJSContentLoaded = initGeocoder;
+
+    let email_check = 0;
+    let valid_check = 0;
+
+    const checkPassword = () => {
+        const passwordField = document.getElementById('password').value;
+        const confirmPasswordField = document.getElementById('confirm-password').value;
+
+        const checkResult4 = document.getElementById("check-result4");
+
+        if (passwordField !== confirmPasswordField) {
+            checkResult4.style.color = "red";
+            checkResult4.innerHTML = '비밀번호와 비밀번호 확인이 일치하지 않습니다.';
+            valid_check = 1;
+            return false;
+        }
+
+        valid_check = 0;
+        checkResult4.style.color = "green";
+        checkResult4.innerHTML = '비밀번호와 비밀번호 확인이 일치합니다.';
+    }
+    const emailCheck = () => {
+        const email = document.getElementById("email").value;
+        const checkResult2 = document.getElementById("check-result2");
+        $.ajax({
+            // 요청방식: post, url: "email-check", 데이터: 이메일
+            type: "post",
+            url: "/member/email-check",
+            data: {
+                "email": email
+            },
+            success: function(res) {
+                console.log("요청성공", res);
+                if (res == "ok") {
+                    checkResult2.style.color = "green";
+                    checkResult2.innerHTML = "사용가능한 이메일";
+                    email_check = 1;
+
+                } else {
+                    checkResult2.style.color = "red";
+                    checkResult2.innerHTML = "이미 사용중인 이메일";
+                    email_check = 0;
+
+                }
+            },
+            error: function(err) {
+            }
+        });
+    }
+
+
+
+
+
+
+    const validateForm = () => {
+
+
+
+        const usernameField = document.getElementById('username').value;
+        const emailField = document.getElementById('email').value;
+        const passwordField = document.getElementById('password').value;
+        const confirmPasswordField = document.getElementById('confirm-password').value;
+        const addressField = document.getElementById('address').value;
+        const introductionField = document.getElementById('introduction').value;
+        const ageField = document.getElementById("age").value;
+        const sexField = document.getElementsByName("sex");
+        let sex;
+
+        sexField.forEach(s => {
+            if(s.checked){
+                sex = s.value;
+            }
+        });
+
+        // 사용자 이름 필드가 비어있는지 검사
+        if (usernameField === '') {
+            alert("사용자 이름을 입력하세요.");
+            return false;
+        }
+        // 이메일 필드가 비어있는지 검사
+        if (emailField === '') {
+            alert("이메일을 입력하세요.");
+            return false;
+        }
+        // 비밀번호 필드가 비어있는지 검사
+        if (passwordField === '') {
+            alert("비밀번호를 입력하세요.");
+            return false;
+        }
+        // 비밀번호 확인 필드가 비어있는지 검사
+        if (confirmPasswordField === '') {
+            alert("비밀번호 확인을 입력하세요.");
+            return false;
+        }
+
+        if (introductionField === '') {
+            alert("자기소개서를 입력해주세요.");
+            return false;
+        }
+
+        if (addressField === '') {
+            alert("거주지를 선택해 주세요.");
+            return false;
+        }
+
+        if (ageField === '') {
+            alert("나이를 입력해 주세요.");
+            return false;
+        }
+
+
+
+
+
+        if(email_check === 1 && valid_check === 0){
+
+            const params = {
+                "username" : usernameField,
+                "email" : emailField,
+                "password" : passwordField,
+                "coord" : map.center,
+                "introduction" : introductionField,
+                "age" : ageField,
+                "sex" : sex,
+                "imageEntities" : imagesField,
+                "address" : addressField
+            };
+            $.ajax({
+                // 요청방식: post, url: "email-check", 데이터: 이메일
+                type: "post",
+                url: "/member/save",
+
+                data: JSON.stringify(params),
+                contentType: "application/json",
+
+                success: function(res) {
+                    alert("회원가입이 완료됐습니다.")
+                    location.href = "/";
+                },
+                error: function(err) {
+                }
+            });
+
+        } else{
+            if (email_check !== 1){
+                alert("중복된 이메일은 사용할수 없습니다.");
+            } else {
+                alert("비밀번호와 비밀번호 확인이 같지 않습니다.")
+            }
+        }
+
+
+    }
+
+</script>
+</body>
+</html>
